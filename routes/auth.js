@@ -8,5 +8,7 @@ router.get('/', (req, res) => {
   });
 });
 router.post('/signup', signUp);
+router.post('/login', login);
+router.use(checkTokenToAuthorize);
 
 module.exports = router;
