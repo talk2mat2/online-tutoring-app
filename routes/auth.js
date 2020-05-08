@@ -7,5 +7,6 @@ router.get('/', (req, res) => {
     title: 'Express platform',
   });
 });
+router.post('/signup', signUp);
 
 module.exports = router;
