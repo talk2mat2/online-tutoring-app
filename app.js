@@ -5,6 +5,8 @@ const mongoose = require('mongoose'),
   cookieParser = require('cookie-parser'),
   logger = require('morgan'),
   authRoutes = require('./routes/auth'),
+  subjectRoutes = require('./routes/subject'),
+  // categoryRoutes = require('./routes/category'),
   app = express(),
   db =
     'mongodb+srv://okeken:TYZhw85bkMNEjMxJ@cluster0-msnz6.mongodb.net/test?retryWrites=true&w=majority';
@@ -35,6 +37,8 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use(authRoutes);
+app.use(subjectRoutes);
+//app.use(categoryRoutes);
 
 // catch 404 and forward to error handler
 app.use(function (req, res, next) {

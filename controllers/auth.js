@@ -4,12 +4,27 @@ const bcrypt = require('bcrypt'),
 
 //Sign up User
 exports.signUp = (req, res, next) => {
-  const email = req.body.email,
-    password = req.body.password;
-  if (!email || !password) {
+  const { email, password, username } = req.body;
+  let role;
+
+  if (!email) {
     res.status(400).send({
       status: false,
-      message: 'All fields are required',
+      message: 'Email is required to proceed',
+    });
+    return;
+  }
+  if (!password) {
+    res.status(400).send({
+      status: false,
+      message: 'Choose a password to continue',
+    });
+    return;
+  }
+  if (!username) {
+    res.status(400).send({
+      status: false,
+      message: 'Choose a username to continue',
     });
     return;
   }
@@ -21,6 +36,14 @@ exports.signUp = (req, res, next) => {
         .send({ status: false, message: 'This email already exists' });
     }
   });
+  User.findOne({ username }).then((user) => {
+    if (user) {
+      return res.status(423).send({
+        status: false,
+        message: 'Username already taken! Choose a unique one',
+      });
+    }
+  });
 
   bcrypt
     .hash(password, 12)
@@ -28,6 +51,8 @@ exports.signUp = (req, res, next) => {
       let user = new User({
         email,
         password,
+        username,
+        userRole: 'student',
       });
       return user.save();
     })
@@ -67,7 +92,7 @@ exports.login = (req, res, next) => {
 
           'somworldisfullofdevelopersandsolutionproviders',
 
-          { expiresIn: '1hr' }
+          { expiresIn: '3hr' }
         );
 
         res.status(200).send({
@@ -93,12 +118,20 @@ exports.checkTokenToAuthorize = async (req, res, next) => {
     return next(new Error('Please Log in and try again'));
   }
   // Decode token
-  const decodedToken = await jwt.verify(
+
+  const decodedToken = await jwt.decode(
     token,
     'worldisfullofdevelopersandsolutionproviders'
   );
+
+  // const decodedToken = await jwt.verify(
+  //   token,
+  //   'worldisfullofdevelopersandsolutionproviders'
+  // );
+
   // Check if user still exists
   const user = await User.findById(decodedToken._id);
+
   // If no user is found
   if (!user) {
     return next(new Error('This user does not exist'));
@@ -106,4 +139,86 @@ exports.checkTokenToAuthorize = async (req, res, next) => {
   // Set user to request header
   req.user = user;
   next();
+};
+
+//find by id
+exports.viewUserById = async (req, res) => {
+  try {
+    await User.findById({ _id: req.body.id }).then((data) => {
+      console.log(data);
+      !data
+        ? res.status(404).send({
+            message: 'User do not exists',
+          })
+        : res.status(200).send({
+            message: 'request successful',
+            data,
+          });
+    });
+  } catch (e) {
+    res.status(500).send({
+      message: 'An error occurred',
+    });
+  }
+};
+
+//view user details
+exports.viewAllUser = async (req, res) => {
+  try {
+    await User.find({}).then((data) => {
+      !data
+        ? res.status('users not found')
+        : res.status(200).send({
+            message: 'All Users',
+            data,
+          });
+    });
+  } catch (e) {
+    res.status(500).send({
+      message: 'An error occured',
+    });
+  }
+};
+//turn user tutor
+exports.becomeTutor = async (req, res) => {
+  try {
+    await User.findByIdAndUpdate(
+      { _id: req.body.id },
+      {
+        useFindAndModify: false,
+      },
+      { userRole: 'tutor' }
+    ).then((data) => {
+      !data
+        ? res.status(404).send({
+            message: 'User not found',
+          })
+        : res.status(200).send({
+            message: 'You have successfully upgraded to  a tutor',
+            data,
+          });
+    });
+  } catch (e) {
+    res.status(500).send({ message: 'An error occured' });
+  }
+};
+
+//delete all users
+
+exports.deleteAllusers = async (req, res) => {
+  try {
+    await User.deleteMany().then((data) => {
+      !data
+        ? res.status(423).send({
+            message: 'Record could not be deleted at the moment',
+          })
+        : res.status(200).send({
+            message: 'Records deleted successfully',
+          });
+    });
+  } catch (e) {
+    res.status(500).send({
+      message: 'An  error occured',
+    });
+  }
 };
