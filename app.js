@@ -10,6 +10,7 @@ const mongoose = require('mongoose'),
   app = express(),
   db =
     'mongodb+srv://okeken:TYZhw85bkMNEjMxJ@cluster0-msnz6.mongodb.net/test?retryWrites=true&w=majority';
+const port = process.env.PORT || 7000;
 mongoose
 
   .connect(
@@ -21,7 +22,7 @@ mongoose
   .then((result) => {
     console.log('Database connected');
 
-    app.listen(7000);
+    app.listen(`${port}`);
   })
 
   .catch((err) => console.log(err));
